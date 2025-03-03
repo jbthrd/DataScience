@@ -65,7 +65,7 @@ class CarFeatures(BaseModel):
 class PredictionResponse(BaseModel):
     predicted_price: float
 
-# Process input data to match the preprocessing steps used during training
+# Process input data to match exactly with the training features
 def process_input(input_data: CarFeatures):
     # Convert to dictionary
     data = input_data.dict()
@@ -98,61 +98,47 @@ def process_input(input_data: CarFeatures):
     current_year = dt.datetime.now().year
     car_age = current_year - data["Prod_year"]
     
-    # 6. Create one-hot encodings for categorical variables
-    # Drive wheels
-    drive_4wd = 1 if data["Drive_wheels"] == "4wd" else 0
-    drive_front = 1 if data["Drive_wheels"] == "front" else 0
-    drive_rear = 1 if data["Drive_wheels"] == "rear" else 0
+    # 6. Create feature array exactly matching training features
+    # The order matters and must match: ['Manufacturer', 'Model', 'Prod. year', 'Category', 'Leather interior', 
+    # 'Engine volume', 'Mileage', 'Cylinders', 'Doors', 'Wheel', 'Color', 'Airbags', 'Turbo', 
+    # 'Drive_4x4', 'Drive_front', 'Drive_rear', 'Gear_automatic', 'Gear_manual', 'Gear_tiptronic', 
+    # 'Gear_variator', 'Fuel_cng', 'Fuel_diesel', 'Fuel_hybrid', 'Fuel_hydrogen', 'Fuel_lpg', 
+    # 'Fuel_petrol', 'Fuel_plug-in hybrid']
     
-    # Gear box type
-    gear_automatic = 1 if data["Gear_box_type"] == "automatic" else 0
-    gear_manual = 1 if data["Gear_box_type"] == "manual" else 0
-    gear_tiptronic = 1 if data["Gear_box_type"] == "tiptronic" else 0
-    gear_variator = 1 if data["Gear_box_type"] == "variator" else 0
-    
-    # Fuel type
-    fuel_cng = 1 if data["Fuel_type"] == "cng" else 0
-    fuel_diesel = 1 if data["Fuel_type"] == "diesel" else 0
-    fuel_gasoline = 1 if data["Fuel_type"] == "gasoline" else 0
-    fuel_hybrid = 1 if data["Fuel_type"] == "hybrid" else 0
-    fuel_lpg = 1 if data["Fuel_type"] == "lpg" else 0
-    fuel_plugin_hybrid = 1 if data["Fuel_type"] == "plugin hybrid" else 0
-    
-    # 7. Convert leather interior to numeric
-    leather_interior = 1 if data["Leather_interior"].lower() == "yes" else 0
-    
-    # NOTE: For simplicity in this example, we'll use simple label encoding
-    # for remaining categorical variables. In a production environment,
-    # you should save and load the actual label encoders used during training.
-    
-    # Create a list of features in the same order as expected by the model
     features = [
-        hash(data["Manufacturer"]) % 100,  # Placeholder for manufacturer encoding
-        hash(data["Model"]) % 100,         # Placeholder for model encoding
-        hash(data["Category"]) % 100,      # Placeholder for category encoding
-        leather_interior,
-        mileage,
-        data["Cylinders"],
-        engine_volume,
-        doors,
-        hash(data["Wheel"]) % 100,         # Placeholder for wheel encoding
-        hash(data["Color"]) % 100,         # Placeholder for color encoding
-        data["Airbags"],
-        car_age,
-        1 if turbo else 0,
-        drive_4wd,
-        drive_front,
-        drive_rear,
-        gear_automatic,
-        gear_manual,
-        gear_tiptronic,
-        gear_variator,
-        fuel_cng,
-        fuel_diesel,
-        fuel_gasoline,
-        fuel_hybrid,
-        fuel_lpg,
-        fuel_plugin_hybrid
+        hash(data["Manufacturer"]) % 100,          # Manufacturer encoding
+        hash(data["Model"]) % 100,                 # Model encoding
+        car_age,                                   # Prod. year (as car age)
+        hash(data["Category"]) % 100,              # Category encoding
+        1 if data["Leather_interior"].lower() == "yes" else 0,  # Leather interior
+        engine_volume,                             # Engine volume
+        mileage,                                   # Mileage
+        data["Cylinders"],                         # Cylinders
+        doors,                                     # Doors
+        hash(data["Wheel"]) % 100,                 # Wheel encoding
+        hash(data["Color"]) % 100,                 # Color encoding
+        data["Airbags"],                           # Airbags
+        1 if turbo else 0,                         # Turbo
+        
+        # Drive wheels (one-hot encoded)
+        1 if data["Drive_wheels"].lower() == "4wd" else 0,       # Drive_4x4
+        1 if data["Drive_wheels"].lower() == "front" else 0,     # Drive_front
+        1 if data["Drive_wheels"].lower() == "rear" else 0,      # Drive_rear
+        
+        # Gear box type (one-hot encoded)
+        1 if data["Gear_box_type"].lower() == "automatic" else 0,  # Gear_automatic
+        1 if data["Gear_box_type"].lower() == "manual" else 0,     # Gear_manual
+        1 if data["Gear_box_type"].lower() == "tiptronic" else 0,  # Gear_tiptronic
+        1 if data["Gear_box_type"].lower() == "variator" else 0,   # Gear_variator
+        
+        # Fuel type (one-hot encoded)
+        1 if data["Fuel_type"].lower() == "cng" else 0,          # Fuel_cng
+        1 if data["Fuel_type"].lower() == "diesel" else 0,       # Fuel_diesel
+        1 if data["Fuel_type"].lower() == "hybrid" else 0,       # Fuel_hybrid
+        0,                                                       # Fuel_hydrogen (not in input, set to 0)
+        1 if data["Fuel_type"].lower() == "lpg" else 0,          # Fuel_lpg
+        1 if data["Fuel_type"].lower() == "gasoline" else 0,     # Fuel_petrol (gasoline)
+        1 if data["Fuel_type"].lower() == "plugin hybrid" else 0  # Fuel_plug-in hybrid
     ]
     
     return np.array([features])

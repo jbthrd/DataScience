@@ -1,6 +1,6 @@
 # Car Price Prediction API
 
-A FastAPI application that predicts car prices based on vehicle features using an XGBoost model.
+This is our FastAPI application that predicts car prices based on vehicle features using an XGBoost model.
 
 ## Quick Start
 
@@ -76,13 +76,3 @@ The API expects a JSON object with the following properties:
   "predicted_price": 23450.75
 }
 ```
-
-## Deployment on Render
-
-1. Create a Render account at https://render.com
-2. Create a new Web Service, connecting to your Git repository
-3. Set build command: `pip install -r requirements.txt`
-4. Set start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-5. Make sure your `best_model.pkl` file is included in the repository
-
-Once deployed, your API will be available at the URL provided by Render.
